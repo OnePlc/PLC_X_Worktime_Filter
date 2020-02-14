@@ -2,10 +2,10 @@
 /**
  * Module.php - Module Class
  *
- * Module Class File for Worktime Module
+ * Module Class File for Worktime Filter Plugin
  *
  * @category Config
- * @package Worktime
+ * @package Worktime\Filter
  * @author Verein onePlace
  * @copyright (C) 2020  Verein onePlace <admin@1plc.ch>
  * @license https://opensource.org/licenses/BSD-3-Clause
@@ -28,7 +28,7 @@ class Module {
      *
      * @since 1.0.0
      */
-    const VERSION = '1.0.1';
+    const VERSION = '1.0.2';
 
     /**
      * Load module config file
@@ -53,12 +53,15 @@ class Module {
     }
 
     /**
+     * Load Models
+     */
+
+    /**
      * Load Controllers
      */
     public function getControllerConfig() : array {
         return [
             'factories' => [
-                # Plugin Example Controller
                 Controller\FilterController::class => function($container) {
                     $oDbAdapter = $container->get(AdapterInterface::class);
                     $tableGateway = $container->get(\OnePlace\Worktime\Model\WorktimeTable::class);
@@ -71,7 +74,16 @@ class Module {
                         $container
                     );
                 },
+                # Installer
+                Controller\InstallController::class => function($container) {
+                    $oDbAdapter = $container->get(AdapterInterface::class);
+                    return new Controller\InstallController(
+                        $oDbAdapter,
+                        $container->get(\OnePlace\Worktime\Model\WorktimeTable::class),
+                        $container
+                    );
+                },
             ],
         ];
-    }
+    } # getControllerConfig()
 }
