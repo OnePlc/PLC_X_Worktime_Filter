@@ -19,11 +19,12 @@ namespace OnePlace\Worktime\Filter\Controller;
 
 use Application\Controller\CoreUpdateController;
 use Application\Model\CoreEntityModel;
-use OnePlace\Worktime\Filter\Model\FilterTable;
 use Laminas\View\Model\ViewModel;
 use Laminas\Db\Adapter\AdapterInterface;
 use Laminas\Db\TableGateway\TableGateway;
 use Laminas\Db\ResultSet\ResultSet;
+use OnePlace\Worktime\Model\WorktimeTable;
+
 
 class InstallController extends CoreUpdateController {
     /**
@@ -33,7 +34,7 @@ class InstallController extends CoreUpdateController {
      * @param FilterTable $oTableGateway
      * @since 1.0.0
      */
-    public function __construct(AdapterInterface $oDbAdapter, FilterTable $oTableGateway, $oServiceManager)
+    public function __construct(AdapterInterface $oDbAdapter, WorktimeTable $oTableGateway, $oServiceManager)
     {
         $this->oTableGateway = $oTableGateway;
         $this->sSingleForm = 'worktimefilter-single';
@@ -56,42 +57,6 @@ class InstallController extends CoreUpdateController {
 
         if(! $oRequest->isPost()) {
 
-            $bTableExists = false;
-
-            try {
-                $this->oTableGateway->fetchAll(false);
-                $bTableExists = true;
-            } catch (\RuntimeException $e) {
-
-            }
-
-            return new ViewModel([
-                'bTableExists' => $bTableExists,
-                'sVendor' => 'oneplace',
-                'sModule' => 'oneplace-worktime-filter',
-            ]);
-        } else {
-            $sSetupConfig = $oRequest->getPost('plc_module_setup_config');
-
-            $sSetupFile = 'vendor/oneplace/oneplace-worktime-filter/data/install.sql';
-            if(file_exists($sSetupFile)) {
-                echo 'got install file..';
-                $this->parseSQLInstallFile($sSetupFile,CoreUpdateController::$oDbAdapter);
-            }
-
-            if($sSetupConfig != '') {
-                $sConfigStruct = 'vendor/oneplace/oneplace-worktime-filter/data/structure_'.$sSetupConfig.'.sql';
-                if(file_exists($sConfigStruct)) {
-                    echo 'got struct file for config '.$sSetupConfig;
-                    $this->parseSQLInstallFile($sConfigStruct,CoreUpdateController::$oDbAdapter);
-                }
-                $sConfigData = 'vendor/oneplace/oneplace-worktime-filter/data/data_'.$sSetupConfig.'.sql';
-                if(file_exists($sConfigData)) {
-                    echo 'got data file for config '.$sSetupConfig;
-                    $this->parseSQLInstallFile($sConfigData,CoreUpdateController::$oDbAdapter);
-                }
-            }
-
             $oModTbl = new TableGateway('core_module', CoreUpdateController::$oDbAdapter);
             $oModTbl->insert([
                 'module_key' => 'oneplace-worktime-filter',
@@ -100,14 +65,6 @@ class InstallController extends CoreUpdateController {
                 'label' => 'onePlace Worktime Filter',
                 'vendor' => 'oneplace',
             ]);
-
-            try {
-                $this->oTableGateway->fetchAll(false);
-                $bTableExists = true;
-            } catch (\RuntimeException $e) {
-
-            }
-            $bTableExists = false;
 
             $this->flashMessenger()->addSuccessMessage('Worktime Filter DB Update successful');
             $this->redirect()->toRoute('application', ['action' => 'checkforupdates']);
